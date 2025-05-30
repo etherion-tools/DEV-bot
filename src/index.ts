@@ -42,7 +42,10 @@ const commandsData: ApplicationCommandDataResolvable[] = [
     .setName("uniswap")
     .setDescription("Returns the Uniswap link for the token.")
     .toJSON(),
-
+  new SlashCommandBuilder()
+    .setName("volume")
+    .setDescription("Returns the 24h volume of the token.")
+    .toJSON(),
 ];
 
 async function createDiscordServer(): Promise<Client> {
@@ -69,19 +72,24 @@ async function handleInteractionCommands(
 
   if (commandName === "ping") {
     await interaction.reply("Pong!");
-  }
-  else if (commandName === "price") {    
+
+  } else if (commandName === "price" || commandName === "volume") {
     const tokenData = await fetchTokenPrice("scout-protocol-token");
 
-    if (tokenData) {
-      const price = tokenData.usd;
-      const replyMessage = `**DEV Token Price:** $${price.toFixed(5)}\n`;                           
-      await interaction.reply(replyMessage);
-    } else {
-      await interaction.reply("Sorry, I couldn't fetch the price right now. Please try again later.");
+    if (!tokenData) {
+      await interaction.reply("Sorry, I couldn't fetch the token data right now. Please try again later.");
+      return;
     }
-  }
-  else if (commandName === "uniswap") {
+
+    if (commandName === "price") {      
+      const replyMessage = `**DEV Token Price:** $${tokenData.usd.toFixed(5)}`;
+      await interaction.reply(replyMessage);
+    
+    } else if (commandName === "volume") {
+      const replyMessage = `**DEV Token 24h Volume:** $${tokenData.usd_24h_vol?.toFixed(2)}`;
+      await interaction.reply(replyMessage);
+    }
+  } else if (commandName === "uniswap") {
     await interaction.reply(UNISWAP_LINK);
   }
 }
