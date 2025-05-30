@@ -16,6 +16,7 @@ interface CoinGeckoPriceDetail {
   usd: number;
   usd_24h_vol?: number;
   usd_24h_change?: number;
+  usd_market_cap?: number;
 }
 
 interface CoinGeckoPriceResponse {
@@ -35,7 +36,7 @@ if (!COINGECKO_API_KEY) {
  * @returns The price data including USD price, 24h volume, and 24h change
  */
 export async function fetchTokenPrice(tokenId: string): Promise<CoinGeckoPriceDetail | null> {
-    const url = `https://api.coingecko.com/api/v3/simple/price?vs_currencies=usd&ids=${tokenId}&include_24hr_vol=true&include_24hr_change=true&precision=5`;
+    const url = `https://api.coingecko.com/api/v3/simple/price?vs_currencies=usd&ids=${tokenId}&include_market_cap=true&include_24hr_vol=true&include_24hr_change=true&precision=5`;
     const options = {
         method: 'GET',
         headers: {

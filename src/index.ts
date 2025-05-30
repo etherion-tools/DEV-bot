@@ -43,6 +43,10 @@ const commandsData: ApplicationCommandDataResolvable[] = [
     .setDescription("Returns the Uniswap link for the token.")
     .toJSON(),
   new SlashCommandBuilder()
+    .setName("mcap")
+    .setDescription("Returns the market cap of the token.")
+    .toJSON(),
+  new SlashCommandBuilder()
     .setName("price-change")
     .setDescription("Returns the price change over the last 24 hours of the DEV token.")
     .toJSON(),
@@ -107,6 +111,15 @@ async function handleInteractionCommands(
       await interaction.reply(replyMessage);
     } else {
       await interaction.reply("Sorry, I couldn't fetch the price change right now. Please try again later.");
+    }
+  }
+  else if (commandName === "mcap") {
+    const tokenData = await fetchTokenPrice("scout-protocol-token");
+    if (tokenData) {
+      const replyMessage = `**DEV Token Market Cap:** $${tokenData.usd_market_cap?.toFixed(2)}`;
+      await interaction.reply(replyMessage);
+    } else {
+      await interaction.reply("Sorry, I couldn't fetch the market cap right now. Please try again later.");
     }
   }
 }
