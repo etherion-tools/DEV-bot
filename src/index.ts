@@ -72,25 +72,28 @@ async function handleInteractionCommands(
 
   if (commandName === "ping") {
     await interaction.reply("Pong!");
-
-  } else if (commandName === "price" || commandName === "volume") {
+  }
+  else if (commandName === "price") {    
     const tokenData = await fetchTokenPrice("scout-protocol-token");
 
-    if (!tokenData) {
-      await interaction.reply("Sorry, I couldn't fetch the token data right now. Please try again later.");
-      return;
-    }
-
-    if (commandName === "price") {      
-      const replyMessage = `**DEV Token Price:** $${tokenData.usd.toFixed(5)}`;
+    if (tokenData) {
+      const replyMessage = `**DEV Token Price:** $${tokenData.usd.toFixed(5)}\n`;                           
       await interaction.reply(replyMessage);
-    
-    } else if (commandName === "volume") {
-      const replyMessage = `**DEV Token 24h Volume:** $${tokenData.usd_24h_vol?.toFixed(2)}`;
-      await interaction.reply(replyMessage);
+    } else {
+      await interaction.reply("Sorry, I couldn't fetch the price right now. Please try again later.");
     }
-  } else if (commandName === "uniswap") {
+  }
+  else if (commandName === "uniswap") {
     await interaction.reply(UNISWAP_LINK);
+  }
+  else if (commandName === "volume") {
+    const tokenData = await fetchTokenPrice("scout-protocol-token");
+    if (tokenData) {
+    const replyMessage = `**DEV Token 24h Volume:** $${tokenData.usd_24h_vol?.toFixed(2)}`;
+    await interaction.reply(replyMessage);
+    } else {
+      await interaction.reply("Sorry, I couldn't fetch the volume right now. Please try again later.");
+    }
   }
 }
 
