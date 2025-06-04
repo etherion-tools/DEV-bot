@@ -35,6 +35,8 @@
     ```bash
     npm run dev
     ```
+## Commands
+* [Bot Slash Commands](/src/docs/features.md)
 
 ## Basic Test
 
@@ -61,7 +63,6 @@ With the bot running and invited to a server:
 
 ## TODO
 
-- Implement the `/price` command: Display current DEV token price and a Uniswap link.
-- Implement the `/volume` command: Display 24-hour trading volume for DEV token.
+- Update the `/mcap` command to show short format eg:- 24.45M
 - Implement the `/linkwallet [wallet_address]` command: Allow users to link their wallets.
-- Implement the `/balance` command: Show DEV token balance and USD value for linked wallets.
+- Implement `/total-price` command which will take an amount input from the user and return the USD price of that amount of DEV token
