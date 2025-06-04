@@ -47,7 +47,6 @@ With the bot running and invited to a server:
 ## Project Structure
 
 *   `src/`: TypeScript source files (main logic in `src/index.ts`).
-*   `dist/`: Compiled JavaScript output (ignored by Git).
 *   `package.json`: Project metadata, dependencies, and scripts.
 *   `tsconfig.json`: TypeScript compiler options.
 *   `.env`: For environment variables (token, prefix - ignored by Git).
