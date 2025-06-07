@@ -13,6 +13,7 @@ import logger from "./utils/logger";
 import { startDevPriceUpdateJob } from "./cron/priceUpdateJob";
 import { fetchTokenPrice, formatNumber } from "./utils/coinGecko";
 import { UNISWAP_LINK } from "./utils/constants";
+import { createPriceAlertCommand ,handleCreatePriceAlert} from "./alertCommands/createPriceAlert";
 
 const token: string | undefined = process.env.DISCORD_TOKEN;
 
@@ -62,6 +63,7 @@ const commandsData: ApplicationCommandDataResolvable[] = [
         .setDescription("The amount of DEV tokens")
         .setRequired(true))
     .toJSON(),
+  createPriceAlertCommand,
 ];
 
 async function createDiscordServer(): Promise<Client> {
@@ -144,6 +146,9 @@ async function handleInteractionCommands(
     } else {
       await interaction.reply("Sorry, I couldn't fetch the token price right now. Please try again later.");
     }
+  }
+  else if (commandName === "create-price-alert") {
+    await handleCreatePriceAlert(interaction);
   }
 }
 
