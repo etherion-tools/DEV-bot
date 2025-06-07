@@ -1,9 +1,7 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, InteractionResponseType } from "discord.js";
 import logger from "../utils/logger";
-import { PrismaClient } from "../generated/prisma";
+import prisma from "../utils/prisma";
 
-
-const prisma = new PrismaClient();
 
 export const createPriceAlertCommand = new SlashCommandBuilder()
   .setName("create-price-alert")
