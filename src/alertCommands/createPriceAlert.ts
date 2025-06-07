@@ -1,6 +1,8 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction, InteractionResponseType } from "discord.js";
+import { SlashCommandBuilder, ChatInputCommandInteraction } from "discord.js";
 import logger from "../utils/logger";
 import prisma from "../utils/prisma";
+import { fetchTokenPrice } from "../utils/coinGecko";
+
 
 
 export const createPriceAlertCommand = new SlashCommandBuilder()
@@ -42,30 +44,38 @@ export async function handleCreatePriceAlert(interaction: ChatInputCommandIntera
   }
 
   try {
-    // Ensure server exists and is up to date
-    const server = await prisma.discordServer.upsert({
-      where: { id: guildId },
-      update: { name: interaction.guild?.name },
-      create: { id: guildId, name: interaction.guild?.name }
-    });
+    await prisma.$transaction(async (prisma) => {
+      // Ensure server exists and is up to date
+      const server = await prisma.discordServer.upsert({
+        where: { id: guildId },
+        update: { name: interaction.guild?.name },
+        create: { id: guildId, name: interaction.guild?.name }
+      });
 
-    // Create the Alert with nested PriceAlert creation
-    await prisma.alert.create({
-      data: {
-        channelId: channelId,
-        enabled: true,
-        discordServerId: server.id,
-        priceAlert: {
-          create: {
-            direction: direction,
-            value: value
+      // Create the Alert with nested PriceAlert creation
+      await prisma.alert.create({
+        data: {
+          channelId: channelId,
+          enabled: true,
+          discordServerId: server.id,
+          priceAlert: {
+            create: {
+              direction: direction,
+              value: value
+            }
           }
         }
-      }
+      });
     });
 
     const directionEmoji = direction === 'up' ? '📈' : '📉';
-    await interaction.reply(`✅ Alert created! I will notify you in this channel when the price goes ${direction} $${value}. ${directionEmoji}`);
+    const tokenData = await fetchTokenPrice("scout-protocol-token");
+    if (tokenData) {
+      const price = tokenData.usd;
+      await interaction.reply(`✅ Alert created! I will notify you in this channel when the price goes ${direction} to $${value}. ${directionEmoji}, the current DEV price is $${price} `);
+    } else {
+      await interaction.reply("Sorry, I couldn't fetch the token price right now. Please try again later.");
+    }
   } catch (error) {
     logger.error("Error creating price alert:", error);
     await interaction.reply("Sorry, I couldn't create the price alert. Please try again later.");
