@@ -2,8 +2,9 @@ import cron from "node-cron";
 import logger from "../utils/logger";
 import { Client, ActivityType } from "discord.js";
 import { fetchTokenPrice, formatNumber } from "../utils/coinGecko";
+import { getDevPrice } from "../utils/uniswapPrice";
 
-// In-memory store for the latest fetched DEV price (Scout Protocol Token).
+// In-memory store for the latest fetched DEV price
 let latestDevPrice: number | null = null;
 
 /**
@@ -11,22 +12,31 @@ let latestDevPrice: number | null = null;
  */
 async function updateDevActivity(client: Client) {
   try {
-    const tokenData = await fetchTokenPrice("scout-protocol-token");
+    // Fetch price from Uniswap V3 and other metrics from CoinGecko in parallel
+    const [uniswapPrice, tokenData] = await Promise.all([
+      getDevPrice(),
+      fetchTokenPrice("scout-protocol-token"),
+    ]);
+
+    // Use Uniswap price if available, fallback to CoinGecko price
+    const price = uniswapPrice || (tokenData?.usd ?? 0);
+    latestDevPrice = price;
+
     if (tokenData) {
-      const price = tokenData.usd;
       const volume24h = tokenData.usd_24h_vol || 0;
       const change24h = tokenData.usd_24h_change || 0;
-      latestDevPrice = price;
 
       logger.info(
-        `[CronJob-DevPrice] Scout Protocol Token price updated: $${price}`,
+        `[CronJob-DevPrice] Scout Protocol Token price updated: $${price} (Uniswap V3)`
       );
 
       if (client.user) {
         try {
           const title = `DEV $${price.toFixed(5)}`;
           const changeEmoji = change24h >= 0 ? "📈" : "📉";
-          const description = `24h: ${changeEmoji}${change24h.toFixed(2)}% || Vol: $${formatNumber(volume24h)}`;
+          const description = `24h: ${changeEmoji}${change24h.toFixed(
+            2
+          )}% || Vol: $${formatNumber(volume24h)}`;
 
           client.user.setActivity(title, {
             type: ActivityType.Watching,
@@ -34,7 +44,7 @@ async function updateDevActivity(client: Client) {
           });
 
           logger.info(
-            `[CronJob-DevPrice] Bot activity updated - Description: ${description}`,
+            `[CronJob-DevPrice] Bot activity updated - Description: ${description}`
           );
         } catch (activityError) {
           logger.error("[CronJob-DevPrice] Failed to set bot activity", {
@@ -49,7 +59,7 @@ async function updateDevActivity(client: Client) {
       }
     } else {
       logger.warn(
-        "[CronJob-DevPrice] Failed to fetch token price from Coingecko.",
+        "[CronJob-DevPrice] Failed to fetch token metrics from Coingecko."
       );
     }
   } catch (error) {
@@ -66,7 +76,7 @@ async function updateDevActivity(client: Client) {
  */
 export function startDevPriceUpdateJob(client: Client) {
   // Activity/description update every 8 minutes
-  const activityCron = "0 */8 * * * *";
+  const activityCron = "0 */1 * * * *";
   const timezone = "UTC";
 
   try {
@@ -77,16 +87,16 @@ export function startDevPriceUpdateJob(client: Client) {
           logger.info("[CronJob-DevPrice] Activity cron triggered.");
           updateDevActivity(client);
         },
-        { timezone },
+        { timezone }
       );
       logger.info(
-        `[CronJob-DevPrice] Activity update scheduled every 8 minutes (${timezone}).`,
+        `[CronJob-DevPrice] Activity update scheduled every 8 minutes (${timezone}).`
       );
       // Initial run
       updateDevActivity(client);
     } else {
       logger.error(
-        `[CronJob-DevPrice] Invalid cron expression for activity update: ${activityCron}`,
+        `[CronJob-DevPrice] Invalid cron expression for activity update: ${activityCron}`
       );
     }
   } catch (error) {
