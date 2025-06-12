@@ -165,14 +165,3 @@ export async function getDevPrice(): Promise<number> {
     return 0;
   }
 }
-
-// Example usage
-async function main() {
-  const ethPrice = await getEthPrice();
-  console.log("ETH price in USDC:", ethPrice);
-
-  const devPrice = await getDevPrice();
-  console.log("DEV price in USDC:", devPrice);
-}
-
-main().catch(console.error);

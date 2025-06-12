@@ -4,66 +4,51 @@ import { Client, ActivityType } from "discord.js";
 import { fetchTokenPrice, formatNumber } from "../utils/coinGecko";
 import { getDevPrice } from "../utils/uniswapPrice";
 
-// In-memory store for the latest fetched DEV price
+// In-memory store for the latest fetched data
 let latestDevPrice: number | null = null;
+let latestVolume: number | null = null;
+let latestPriceChange: number | null = null;
 
 /**
- * Updates the bot's activity (description/status) every 5 minutes.
+ * Updates the price from Uniswap V3
  */
-async function updateDevActivity(client: Client) {
+async function updateDevPrice(client: Client) {
   try {
-    // Fetch price from Uniswap V3 and other metrics from CoinGecko in parallel
-    const [uniswapPrice, tokenData] = await Promise.all([
-      getDevPrice(),
-      fetchTokenPrice("scout-protocol-token"),
-    ]);
+    const price = await getDevPrice();
+    latestDevPrice = price || latestDevPrice; // Keep old price if new one fails
 
-    // Use Uniswap price if available, fallback to CoinGecko price
-    const price = uniswapPrice || (tokenData?.usd ?? 0);
-    latestDevPrice = price;
+    if (price && client.user) {
+      try {
+        // Only update the price part of the status
+        const title = `DEV $${price.toFixed(5)}`;
+        const description =
+          latestPriceChange !== null && latestVolume !== null
+            ? `24h: ${
+                latestPriceChange >= 0 ? "📈" : "📉"
+              }${latestPriceChange.toFixed(2)}% || Vol: $${formatNumber(
+                latestVolume
+              )}`
+            : "Loading market data...";
 
-    if (tokenData) {
-      const volume24h = tokenData.usd_24h_vol || 0;
-      const change24h = tokenData.usd_24h_change || 0;
+        client.user.setActivity(title, {
+          type: ActivityType.Watching,
+          state: description,
+        });
 
-      logger.info(
-        `[CronJob-DevPrice] Scout Protocol Token price updated: $${price} (Uniswap V3)`
-      );
-
-      if (client.user) {
-        try {
-          const title = `DEV $${price.toFixed(5)}`;
-          const changeEmoji = change24h >= 0 ? "📈" : "📉";
-          const description = `24h: ${changeEmoji}${change24h.toFixed(
-            2
-          )}% || Vol: $${formatNumber(volume24h)}`;
-
-          client.user.setActivity(title, {
-            type: ActivityType.Watching,
-            state: description,
-          });
-
-          logger.info(
-            `[CronJob-DevPrice] Bot activity updated - Description: ${description}`
-          );
-        } catch (activityError) {
-          logger.error("[CronJob-DevPrice] Failed to set bot activity", {
-            errorMessage:
-              activityError instanceof Error
-                ? activityError.message
-                : "Unknown error",
-            errorStack:
-              activityError instanceof Error ? activityError.stack : undefined,
-          });
-        }
+        logger.info(`[CronJob-DevPrice] Price updated: $${price} (Uniswap V3)`);
+      } catch (activityError) {
+        logger.error("[CronJob-DevPrice] Failed to set bot activity", {
+          errorMessage:
+            activityError instanceof Error
+              ? activityError.message
+              : "Unknown error",
+          errorStack:
+            activityError instanceof Error ? activityError.stack : undefined,
+        });
       }
-    } else {
-      logger.warn(
-        "[CronJob-DevPrice] Failed to fetch token metrics from Coingecko."
-      );
     }
   } catch (error) {
-    logger.error("[CronJob-DevPrice] Error in updateDevActivity", {
+    logger.error("[CronJob-DevPrice] Error updating price", {
       errorMessage: error instanceof Error ? error.message : "Unknown error",
       errorStack: error instanceof Error ? error.stack : undefined,
     });
@@ -71,36 +56,110 @@ async function updateDevActivity(client: Client) {
 }
 
 /**
- * Initializes and starts the cron jobs for updating the bot's username and activity.
+ * Updates market metrics from CoinGecko (volume, price change)
+ */
+async function updateMarketMetrics(client: Client) {
+  try {
+    const tokenData = await fetchTokenPrice("scout-protocol-token");
+
+    if (tokenData && client.user) {
+      const volume24h = tokenData.usd_24h_vol || 0;
+      const change24h = tokenData.usd_24h_change || 0;
+
+      latestVolume = volume24h;
+      latestPriceChange = change24h;
+
+      try {
+        // Update the full status with latest price and new market data
+        const title = latestDevPrice
+          ? `DEV $${latestDevPrice.toFixed(5)}`
+          : "DEV Price";
+        const description = `24h: ${
+          change24h >= 0 ? "📈" : "📉"
+        }${change24h.toFixed(2)}% || Vol: $${formatNumber(volume24h)}`;
+
+        client.user.setActivity(title, {
+          type: ActivityType.Watching,
+          state: description,
+        });
+
+        logger.info(
+          `[CronJob-MarketMetrics] Market metrics updated - Volume: $${formatNumber(
+            volume24h
+          )}, Change: ${change24h.toFixed(2)}%`
+        );
+      } catch (activityError) {
+        logger.error("[CronJob-MarketMetrics] Failed to set bot activity", {
+          errorMessage:
+            activityError instanceof Error
+              ? activityError.message
+              : "Unknown error",
+          errorStack:
+            activityError instanceof Error ? activityError.stack : undefined,
+        });
+      }
+    } else {
+      logger.warn(
+        "[CronJob-MarketMetrics] Failed to fetch market metrics from CoinGecko"
+      );
+    }
+  } catch (error) {
+    logger.error("[CronJob-MarketMetrics] Error updating market metrics", {
+      errorMessage: error instanceof Error ? error.message : "Unknown error",
+      errorStack: error instanceof Error ? error.stack : undefined,
+    });
+  }
+}
+
+/**
+ * Initializes and starts the cron jobs for updating the bot's status
  * @param client The Discord Client instance
  */
 export function startDevPriceUpdateJob(client: Client) {
-  // Activity/description update every 8 minutes
-  const activityCron = "0 */1 * * * *";
   const timezone = "UTC";
 
+  // Price update every 1 minute
+  const priceUpdateCron = "* * * * *";
+
+  // Market metrics update every 8 minutes
+  const marketMetricsCron = "*/8 * * * *";
+
   try {
-    if (cron.validate(activityCron)) {
+    // Schedule price updates
+    if (cron.validate(priceUpdateCron)) {
       cron.schedule(
-        activityCron,
+        priceUpdateCron,
         () => {
-          logger.info("[CronJob-DevPrice] Activity cron triggered.");
-          updateDevActivity(client);
+          logger.info("[CronJob] Price update triggered");
+          updateDevPrice(client);
         },
         { timezone }
       );
       logger.info(
-        `[CronJob-DevPrice] Activity update scheduled every 8 minutes (${timezone}).`
+        `[CronJob] Price updates scheduled every minute (${timezone})`
       );
-      // Initial run
-      updateDevActivity(client);
-    } else {
-      logger.error(
-        `[CronJob-DevPrice] Invalid cron expression for activity update: ${activityCron}`
+      // Initial price update
+      updateDevPrice(client);
+    }
+
+    // Schedule market metrics updates
+    if (cron.validate(marketMetricsCron)) {
+      cron.schedule(
+        marketMetricsCron,
+        () => {
+          logger.info("[CronJob] Market metrics update triggered");
+          updateMarketMetrics(client);
+        },
+        { timezone }
       );
+      logger.info(
+        `[CronJob] Market metrics updates scheduled every 8 minutes (${timezone})`
+      );
+      // Initial market metrics update
+      updateMarketMetrics(client);
     }
   } catch (error) {
-    logger.error("[CronJob-DevPrice] Failed to start cron jobs", {
+    logger.error("[CronJob] Failed to start cron jobs", {
       errorMessage: error instanceof Error ? error.message : "Unknown error",
       errorStack: error instanceof Error ? error.stack : undefined,
     });
