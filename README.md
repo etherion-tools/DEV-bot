@@ -23,34 +23,36 @@
 
 ## Development
 
-*   Compile TypeScript:
-    ```bash
-    npm run build
-    ```
-*   Run the compiled bot:
-    ```bash
-    npm start
-    ```
-*   Run in development mode (uses `ts-node` and `nodemon` for live reload):
-    ```bash
-    npm run dev
-    ```
+- Compile TypeScript:
+  ```bash
+  npm run build
+  ```
+- Run the compiled bot:
+  ```bash
+  npm start
+  ```
+- Run in development mode (uses `ts-node` and `nodemon` for live reload):
+  ```bash
+  npm run dev
+  ```
+
 ## Commands
-* [Bot Slash Commands](/src/docs/features.md)
+
+- [Bot Slash Commands](/src/docs/features.md)
 
 ## Basic Test
 
 With the bot running and invited to a server:
 
-*   `!ping` -> `Pong!` (using default prefix).
+- `!ping` -> `Pong!` (using default prefix).
 
 ## Project Structure
 
-*   `src/`: TypeScript source files (main logic in `src/index.ts`).
-*   `package.json`: Project metadata, dependencies, and scripts.
-*   `tsconfig.json`: TypeScript compiler options.
-*   `.env`: For environment variables (token, prefix - ignored by Git).
-*   `.gitignore`: Specifies intentionally untracked files.
+- `src/`: TypeScript source files (main logic in `src/index.ts`).
+- `package.json`: Project metadata, dependencies, and scripts.
+- `tsconfig.json`: TypeScript compiler options.
+- `.env`: For environment variables (token, prefix - ignored by Git).
+- `.gitignore`: Specifies intentionally untracked files.
 
 ## Contributing
 
@@ -62,6 +64,5 @@ With the bot running and invited to a server:
 
 ## TODO
 
-- Update the `/mcap` command to show short format eg:- 24.45M
 - Implement the `/linkwallet [wallet_address]` command: Allow users to link their wallets.
 - Implement `/total-price` command which will take an amount input from the user and return the USD price of that amount of DEV token
