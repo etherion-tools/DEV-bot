@@ -30,7 +30,7 @@ export async function handleCreatePriceAlert(interaction: ChatInputCommandIntera
   if (!guildId) {
     await interaction.reply({ 
       content: "This command can only be used in a server.", 
-      flags: 64 // Ephemeral flag
+      flags: 64
     });
     return;
   }
@@ -38,7 +38,7 @@ export async function handleCreatePriceAlert(interaction: ChatInputCommandIntera
   if (!channelId) {
     await interaction.reply({ 
       content: "This command can only be used in a channel.", 
-      flags: 64 // Ephemeral flag
+      flags: 64
     });
     return;
   }
@@ -72,12 +72,18 @@ export async function handleCreatePriceAlert(interaction: ChatInputCommandIntera
     const tokenData = await fetchTokenPrice("scout-protocol-token");
     if (tokenData) {
       const price = tokenData.usd;
-      await interaction.reply(`✅ Alert created! I will notify you in this channel when the price goes ${direction} to $${value}. ${directionEmoji}, the current DEV price is $${price} `);
+      await interaction.reply(`✅ Alert created! I will notify you in this channel when the price goes ${direction} to $${value}. ${directionEmoji}, the current DEV price is \`$${price}\` `);
     } else {
-      await interaction.reply("Sorry, I couldn't fetch the token price right now. Please try again later.");
+      await interaction.reply({
+        content: "Sorry, I couldn't fetch the token price right now. Please try again later.",
+        flags: 64
+      });
     }
   } catch (error) {
     logger.error("Error creating price alert:", error);
-    await interaction.reply("Sorry, I couldn't create the price alert. Please try again later.");
+    await interaction.reply({
+        content: "Sorry, I couldn't create the price alert. Please try again later.",
+        flags: 64
+    });
   }
 }

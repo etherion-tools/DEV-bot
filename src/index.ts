@@ -17,6 +17,11 @@ import {
   createPriceAlertCommand,
   handleCreatePriceAlert,
 } from "./alertCommands/createPriceAlert";
+import {
+  listPriceAlertsCommand,
+  handleListPriceAlerts,
+} from "./alertCommands/listPriceAlerts";
+
 import { getDevPrice } from "./utils/uniswapPrice";
 
 const token: string | undefined = process.env.DISCORD_TOKEN;
@@ -74,6 +79,7 @@ const commandsData: ApplicationCommandDataResolvable[] = [
     )
     .toJSON(),
   createPriceAlertCommand,
+  listPriceAlertsCommand,
 ];
 
 async function createDiscordServer(): Promise<Client> {
@@ -183,6 +189,8 @@ async function handleInteractionCommands(
     }
   } else if (commandName === "create-price-alert") {
     await handleCreatePriceAlert(interaction);
+  } else if (commandName === "list-alerts") {
+    await handleListPriceAlerts(interaction);
   }
 }
 
