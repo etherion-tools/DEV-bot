@@ -21,6 +21,10 @@ import {
   listPriceAlertsCommand,
   handleListPriceAlerts,
 } from "./alertCommands/listPriceAlerts";
+import {
+  editPriceAlertCommand,
+  handleEditPriceAlert,
+} from "./alertCommands/editPriceAlert";
 
 import { getDevPrice } from "./utils/uniswapPrice";
 
@@ -80,6 +84,7 @@ const commandsData: ApplicationCommandDataResolvable[] = [
     .toJSON(),
   createPriceAlertCommand,
   listPriceAlertsCommand,
+  editPriceAlertCommand,
 ];
 
 async function createDiscordServer(): Promise<Client> {
@@ -191,6 +196,8 @@ async function handleInteractionCommands(
     await handleCreatePriceAlert(interaction);
   } else if (commandName === "list-alerts") {
     await handleListPriceAlerts(interaction);
+  } else if (commandName === "edit-price-alert") {
+    await handleEditPriceAlert(interaction);
   }
 }
 
