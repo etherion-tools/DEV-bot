@@ -75,14 +75,14 @@ export async function handleCreatePriceAlert(interaction: ChatInputCommandIntera
       await interaction.reply(`✅ Alert created! I will notify you in this channel when the price goes ${direction} to $${value}. ${directionEmoji}, the current DEV price is \`$${price}\` `);
     } else {
       await interaction.reply({
-        content: "Sorry, I couldn't fetch the token price right now. Please try again later.",
+        content: "Sorry, couldn't fetch the token price right now. Please try again later.",
         flags: 64
       });
     }
   } catch (error) {
     logger.error("Error creating price alert:", error);
     await interaction.reply({
-        content: "Sorry, I couldn't create the price alert. Please try again later.",
+        content: "Sorry, couldn't fetch the token price right now. Please try again later.",
         flags: 64
     });
   }
