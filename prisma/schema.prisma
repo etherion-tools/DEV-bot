@@ -14,6 +14,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Token {
+  id      String       @id @default(uuid())
+  address String       @unique
+  alerts  Alert[]
+  prices  TokenPrice[]
+}
+
 model DiscordServer {
   id     String  @id @unique
   name   String?
@@ -31,9 +38,12 @@ model Alert {
   updatedAt       DateTime      @updatedAt
   channelId       String
   enabled         Boolean       @default(true)
+  lastTriggered   DateTime?
   priceAlert      PriceAlert?   @relation("AlertToPriceAlert")
   discordServerId String
   discordServer   DiscordServer @relation(fields: [discordServerId], references: [id])
+  tokenId         String
+  token           Token         @relation(fields: [tokenId], references: [id])
 }
 
 model PriceAlert {
@@ -42,4 +52,15 @@ model PriceAlert {
   value     Float
   alertId   String              @unique
   alert     Alert               @relation("AlertToPriceAlert", fields: [alertId], references: [id])
+}
+
+model TokenPrice {
+  id        String   @id @default(uuid())
+  price     Float
+  timestamp DateTime @default(now())
+  tokenId   String
+  token     Token    @relation(fields: [tokenId], references: [id])
+
+  @@index([timestamp])
+  @@index([tokenId])
 }

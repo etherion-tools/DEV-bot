@@ -2,6 +2,8 @@ import { SlashCommandBuilder, ChatInputCommandInteraction } from "discord.js";
 import logger from "../utils/logger";
 import prisma from "../utils/prisma";
 import { fetchTokenPrice } from "../utils/coinGecko";
+import type { PrismaClient } from '@prisma/client';
+
 
 
 
@@ -44,7 +46,7 @@ export async function handleCreatePriceAlert(interaction: ChatInputCommandIntera
   }
 
   try {
-    await prisma.$transaction(async (prisma) => {
+    await prisma.$transaction(async (prisma: PrismaClient) => {
       // Ensure server exists and is up to date
       const server = await prisma.discordServer.upsert({
         where: { id: guildId },
