@@ -18,17 +18,12 @@ async function updateDevPrice(client: Client) {
     const price = await getDevPrice();
 
     if (price) {
-      const token = await prisma.token.findUnique({
-        where: { address: "scout-protocol-token" },
+      await prisma.tokenPrice.create({
+        data: {
+          price,
+          tokenId: "scout-protocol-token",
+        },
       });
-      if (token) {
-        await prisma.tokenPrice.create({
-          data: {
-            price,
-            tokenId: token.id,
-          },
-        });
-      }
     }
 
     latestDevPrice = price || latestDevPrice; // Keep old price if new one fails
