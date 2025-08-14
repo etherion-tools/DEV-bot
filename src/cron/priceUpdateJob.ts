@@ -3,6 +3,7 @@ import logger from "../utils/logger";
 import { Client, ActivityType } from "discord.js";
 import { fetchTokenPrice, formatNumber } from "../utils/coinGecko";
 import { getDevPrice } from "../utils/uniswapPrice";
+import prisma from "../utils/prisma";
 
 // In-memory store for the latest fetched data
 let latestDevPrice: number | null = null;
@@ -15,6 +16,16 @@ let latestPriceChange: number | null = null;
 async function updateDevPrice(client: Client) {
   try {
     const price = await getDevPrice();
+
+    if (price) {
+      await prisma.tokenPrice.create({
+        data: {
+          price,
+          tokenId: "scout-protocol-token",
+        },
+      });
+    }
+
     latestDevPrice = price || latestDevPrice; // Keep old price if new one fails
 
     if (price && client.user) {
@@ -131,6 +142,9 @@ export function startDevPriceUpdateJob(client: Client) {
         priceUpdateCron,
         () => {
           logger.info("[CronJob] Price update triggered");
+          console.log(
+            `[CronJob] Price update triggered at ${new Date().toISOString()}`
+          );
           updateDevPrice(client);
         },
         { timezone }
