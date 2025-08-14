@@ -54,7 +54,9 @@ const commandsData: ApplicationCommandDataResolvable[] = [
     .toJSON(),
   new SlashCommandBuilder()
     .setName("price-live")
-    .setDescription("Fetches and displays the current DEV token price from Uniswap.")
+    .setDescription(
+      "Fetches and displays the current DEV token price from Uniswap."
+    )
     .toJSON(),
   new SlashCommandBuilder()
     .setName("ping")
@@ -225,9 +227,9 @@ async function handleInteractionCommands(
         "Sorry, there was an error fetching the price. Please try again later."
       );
     }
-  }   //Fetch live data from Uniswap
+  } //Fetch live data from Uniswap
   else if (commandName === "price-live") {
-     await priceLive(interaction);
+    await priceLive(interaction);
   } else if (commandName === "create-price-alert") {
     await handleCreatePriceAlert(interaction);
   } else if (commandName === "list-alerts") {
