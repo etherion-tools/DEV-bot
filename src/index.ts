@@ -27,6 +27,7 @@ import {
 } from "./alertCommands/editPriceAlert";
 
 import { getDevPrice } from "./utils/uniswapPrice";
+import priceLive from "./libs/priceLive";
 
 const token: string | undefined = process.env.DISCORD_TOKEN;
 const GUILD_ID = "1404398832317497475";
@@ -50,6 +51,10 @@ const commandsData: ApplicationCommandDataResolvable[] = [
     .setDescription(
       "Fetches and displays the current DEV token price from CoinGecko."
     )
+    .toJSON(),
+  new SlashCommandBuilder()
+    .setName("price-live")
+    .setDescription("Fetches and displays the current DEV token price from Uniswap.")
     .toJSON(),
   new SlashCommandBuilder()
     .setName("ping")
@@ -220,6 +225,9 @@ async function handleInteractionCommands(
         "Sorry, there was an error fetching the price. Please try again later."
       );
     }
+  }   //Fetch live data from Uniswap
+  else if (commandName === "price-live") {
+     await priceLive(interaction);
   } else if (commandName === "create-price-alert") {
     await handleCreatePriceAlert(interaction);
   } else if (commandName === "list-alerts") {
