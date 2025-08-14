@@ -16,13 +16,12 @@ export default async function priceLive(
 
     await interaction.editReply(`Live DEV Price: ${liveprice.toFixed(5)}`);
 
-    const savePrice = await prisma.tokenPrice.create({
+    await prisma.tokenPrice.create({
       data: {
         price: liveprice,
         tokenId: "scout-protocol-token",
       },
     });
-    return savePrice;
   } catch (error) {
     console.log(error);
     await interaction.editReply(
