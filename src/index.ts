@@ -28,6 +28,7 @@ import {
 
 import { getDevPrice } from "./utils/uniswapPrice";
 import priceLive from "./libs/priceLive";
+import getPriceFromDb from "./libs/priceFromDb";
 
 const token: string | undefined = process.env.DISCORD_TOKEN;
 const GUILD_ID = "1404398832317497475";
@@ -126,22 +127,7 @@ async function handleInteractionCommands(
   if (commandName === "ping") {
     await interaction.reply("Pong!");
   } else if (commandName === "price") {
-    try {
-      const price = await getDevPrice();
-      if (price) {
-        const replyMessage = `**DEV Token Price:** $${price.toFixed(5)}\n`;
-        await interaction.reply(replyMessage);
-      } else {
-        await interaction.reply(
-          "Sorry, couldn't fetch the price right now. Please try again later."
-        );
-      }
-    } catch (error) {
-      logger.error("Error fetching DEV price from Uniswap", error);
-      await interaction.reply(
-        "Sorry, couldn't fetch the price right now. Please try again later."
-      );
-    }
+    await getPriceFromDb(interaction);
   } else if (commandName === "uniswap") {
     await interaction.reply(UNISWAP_LINK);
   } else if (commandName === "volume") {
